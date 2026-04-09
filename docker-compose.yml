@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${PORT:-3000}
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - vinclassroom-network
+
+networks:
+  vinclassroom-network:
+    driver: bridge
