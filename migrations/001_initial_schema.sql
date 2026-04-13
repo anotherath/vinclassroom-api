@@ -282,6 +282,9 @@ CREATE POLICY "Notifications viewable by owner" ON notifications
 -- Enable Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE messages;
 ALTER PUBLICATION supabase_realtime ADD TABLE dm_messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE files;
+ALTER PUBLICATION supabase_realtime ADD TABLE reactions;
+ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
 
 -- Functions for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()

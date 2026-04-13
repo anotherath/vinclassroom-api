@@ -47,7 +47,10 @@ export class MembersController {
     @Param('spaceId') spaceId: string,
     @Query('q') query: string,
   ): Promise<any> {
-    const members = await this.membersService.searchMembers(spaceId, query || '');
+    const members = await this.membersService.searchMembers(
+      spaceId,
+      query || '',
+    );
     return {
       success: true,
       data: members,
@@ -105,7 +108,10 @@ export class MembersController {
     @Param('spaceId') spaceId: string,
     @Param('userId') userId: string,
   ): Promise<any> {
-    const activity = await this.membersService.getMemberActivity(spaceId, userId);
+    const activity = await this.membersService.getMemberActivity(
+      spaceId,
+      userId,
+    );
     return {
       success: true,
       data: activity,

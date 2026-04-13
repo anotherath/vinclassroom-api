@@ -9,13 +9,24 @@ import {
   UseGuards,
   Ip,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { LoginDto, RegisterDto, RefreshTokenDto, UpdateProfileDto, ChangePasswordDto } from './dto';
+import {
+  LoginDto,
+  RegisterDto,
+  RefreshTokenDto,
+  UpdateProfileDto,
+  ChangePasswordDto,
+} from './dto';
 
 @ApiTags('Auth')
 @Controller('auth')

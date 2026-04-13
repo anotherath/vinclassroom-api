@@ -142,7 +142,7 @@ export class RoomsController {
   ): Promise<any> {
     // Get room to find space_id
     const room = await this.roomsService.getRoomById(roomId);
-    
+
     await this.roomsService.addRoomMember(roomId, room.space_id, dto);
     return {
       success: true,

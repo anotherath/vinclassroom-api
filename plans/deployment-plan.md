@@ -3,7 +3,7 @@
 > **Dự án:** VinClassroom API  
 > **Stack:** NestJS + Supabase (PostgreSQL) + Redis + Socket.io  
 > **Phiên bản:** 1.0.0  
-> **Cập nhật:** 2026-04-09
+> **Cập nhật:** 2026-04-10
 
 ---
 
@@ -22,12 +22,12 @@ Dự án VinClassroom API là backend cho ứng dụng chat/classroom, sử dụ
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        VINCLASSROOM API DEPLOYMENT                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  Phase 1: Infrastructure Setup (Tuần 1)                                     │
-│  Phase 2: Core Implementation (Tuần 2-3)                                    │
-│  Phase 3: Feature Implementation (Tuần 4-5)                                 │
-│  Phase 4: WebSocket & Real-time (Tuần 6)                                    │
-│  Phase 5: Testing & Optimization (Tuần 7)                                   │
-│  Phase 6: Deployment & Monitoring (Tuần 8)                                  │
+│  Phase 1: Infrastructure Setup (Tuần 1)                     ✅ COMPLETE     │
+│  Phase 2: Core Implementation (Tuần 2-3)                    ✅ COMPLETE     │
+│  Phase 3: Feature Implementation (Tuần 4)                   ✅ COMPLETE     │
+│  Phase 4: WebSocket & Real-time (Tuần 5-6)                  ✅ COMPLETE     │
+│  Phase 5: Testing & Optimization (Tuần 7)                   ⏳ PLANNED      │
+│  Phase 6: Deployment & Monitoring (Tuần 8)                  ⏳ PLANNED      │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -393,71 +393,140 @@ src/
 | Rooms | `modules/rooms/*` | ✅ Complete |
 | Members | `modules/members/*` | ✅ Complete |
 
+#### Week 4: Phase 3 Complete ✅
+
+| Module | Files | Status |
+|--------|-------|--------|
+| Messages | `modules/messages/*` | ✅ Complete |
+| DMs | `modules/dms/*` | ✅ Complete |
+| Notifications | `modules/notifications/*` | ✅ Complete |
+| Files | `modules/files/*` | ✅ Complete |
+| Search | `modules/search/*` | ✅ Complete |
+
+> **Phase 3: 100% Complete!** 🎉
+
 ---
 
 ## Phase 3: Feature Implementation (Tuần 4-5)
 
-### 3.1 Messages & DMs
+### 3.1 Messages & DMs ✅
 
-| Feature | API Endpoints | Redis Keys |
-|---------|---------------|------------|
-| Send message | `POST /rooms/:roomId/messages` | `msg:{id}`, `room:messages:{id}` |
-| Edit message | `PATCH /rooms/:roomId/messages/:id` | `msg:edithistory:{id}` |
-| Delete message | `DELETE /rooms/:roomId/messages/:id` | Soft delete flag |
-| Reactions | `POST/DELETE /messages/:id/reactions` | `react:msg:{id}` |
-| Thread replies | `GET/POST /messages/:id/thread` | `msg:replies:{id}` |
-| Pin message | `POST /messages/:id/pin` | `room:pinned:{id}` |
-| DM conversations | `GET/POST /dms/*` | `dm:{id}`, `dm:messages:{id}` |
+| Feature | API Endpoints | Redis Keys | Status |
+|---------|---------------|------------|--------|
+| Send message | `POST /rooms/:roomId/messages` | `msg:{id}`, `room:messages:{id}` | ✅ |
+| Get messages | `GET /rooms/:roomId/messages` | `room:messages:{id}` | ✅ |
+| Edit message | `PATCH /messages/:messageId` | `msg:edithistory:{id}` | ✅ |
+| Delete message | `DELETE /messages/:messageId` | Soft delete flag | ✅ |
+| Reactions | `POST/DELETE /messages/:id/reactions` | `react:msg:{id}` | ✅ |
+| Thread replies | `GET /messages/:id/thread` | `msg:replies:{id}` | ✅ |
+| Pin message | `POST/DELETE /messages/:id/pin` | `room:pinned:{id}` | ✅ |
+| DM conversations | `GET/POST /dms/*` | `dm:{id}`, `dm:messages:{id}` | ✅ |
 
-### 3.2 Search, Files, Notifications
+> **Note:** See [Phase 3 Summary](./phase3-summary.md) for detailed implementation status.
 
-| Feature | API Endpoints | Redis Keys |
-|---------|---------------|------------|
-| Global search | `GET /search` | `search:{hash}` |
-| File upload | `POST /files` | `user:files:recent:{id}` |
-| Notifications | `GET /notifications` | `user:notifications:{id}` |
-| Unread counts | `GET /notifications/unread-count` | `user:notifications:unread:{id}` |
+### 3.2 Notifications ✅
+
+| Feature | API Endpoints | Redis Keys | Status |
+|---------|---------------|------------|--------|
+| List notifications | `GET /notifications` | `user:notifications:{id}` | ✅ |
+| Unread count | `GET /notifications/unread-count` | `user:notifications:unread:{id}` | ✅ |
+| Mark as read | `POST /notifications/read` | - | ✅ |
+| Delete notification | `DELETE /notifications/:id` | - | ✅ |
+
+> **Completed:** Week 4 (2026-04-10)
+
+### 3.3 Files ✅
+
+| Feature | API Endpoints | Redis Keys | Status |
+|---------|---------------|------------|--------|
+| Upload file | `POST /files` | `user:files:recent:{id}` | ✅ |
+| Get files | `GET /files` | `file:{id}` | ✅ |
+| Get recent files | `GET /files/recent` | `user:files:recent:{id}` | ✅ |
+| Get file stats | `GET /files/stats` | - | ✅ |
+| Delete file | `DELETE /files/:id` | - | ✅ |
+| Get space files | `GET /spaces/:spaceId/files` | `space:files:shared:{id}` | ✅ |
+
+> **Completed:** Week 4 (2026-04-10)
+
+### 3.4 Search ✅
+
+| Feature | API Endpoints | Redis Keys | Status |
+|---------|---------------|------------|--------|
+| Global search | `GET /search` | `search:{hash}` | ✅ |
+| Search messages | `GET /search/messages` | `search:{hash}` | ✅ |
+| Search users | `GET /search/users` | `search:{hash}` | ✅ |
+| Search spaces | `GET /search/spaces` | `search:{hash}` | ✅ |
+| Search files | `GET /search/files` | `search:{hash}` | ✅ |
+| Popular searches | `GET /search/popular` | `search:popular:{type}` | ✅ |
+
+> **Completed:** Week 4 (2026-04-10)
+
+**Database Migration:**
+```sql
+-- Run: migrations/002_search_indexes.sql
+```
 
 ---
 
-## Phase 4: WebSocket & Real-time (Tuần 6)
+## Phase 4: WebSocket & Real-time (Tuần 5-6) ✅
 
-### 4.1 Socket.io Gateway Implementation
+> **Status:** Complete  
+> **Progress:** 100%  
+> **Document:** [Phase 4 Summary](./phase4-summary.md)
 
-```typescript
-// gateways/chat.gateway.ts
-@WebSocketGateway({
-  namespace: 'chat',
-  cors: { origin: process.env.CORS_ORIGIN },
-  transports: ['websocket'],
-})
-export class ChatGateway {
-  // Events to implement:
-  // - joinRoom, leaveRoom
-  // - newMessage, messageDeleted, messageUpdated
-  // - reactionAdded, reactionRemoved
-  // - typing, stopTyping
-  // - userStatusChanged
-}
+### 4.1 Overview
+
+Triển khai WebSocket Gateway với Socket.io để hỗ trợ real-time features:
+- Real-time messaging
+- Typing indicators
+- Online/offline presence
+- Push notifications
+- Multi-server scaling với Redis
+
+### 4.2 Architecture
+
+```
+┌─────────────┐     WebSocket      ┌─────────────────┐
+│   Client    │ ◄────────────────► │  Chat Gateway   │
+│  (Browser)  │                    │   (Socket.io)   │
+└─────────────┘                    └────────┬────────┘
+                                            │
+                              ┌─────────────┼─────────────┐
+                              │             │             │
+                        ┌─────▼─────┐ ┌────▼────┐ ┌─────▼──────┐
+                        │  Redis    │ │  Redis  │ │   Redis    │
+                        │  Pub/Sub  │ │ Presence│ │  Rooms     │
+                        └───────────┘ └─────────┘ └────────────┘
 ```
 
-### 4.2 Redis Pub/Sub for Horizontal Scaling
+### 4.3 Key Components
 
-```typescript
-// gateways/adapters/redis.adapter.ts
-export class RedisIoAdapter extends IoAdapter {
-  // Sử dụng @socket.io/redis-adapter
-  // Cho phép scale multiple server instances
-}
-```
+| Component | File | Status |
+|-----------|------|--------|
+| Chat Gateway | `gateways/chat.gateway.ts` | ✅ |
+| Redis Adapter | `gateways/adapters/redis.adapter.ts` | ✅ |
+| WS JWT Guard | `gateways/guards/ws-jwt.guard.ts` | ✅ |
+| WS Rate Limit Guard | `gateways/guards/ws-rate-limit.guard.ts` | ✅ |
+| Connection Manager | `gateways/chat.gateway.ts` | ✅ |
 
-### 4.3 Event Mapping
+### 4.4 Event Mapping
 
 | Redis Channel | Socket Event | Direction |
 |---------------|--------------|-----------|
 | `channel:room:{id}` | `newMessage`, `messageDeleted`, `messageUpdated` | Server → Client |
 | `channel:dm:{id}` | `newDM`, `dmRead` | Server → Client |
 | `channel:user:{id}` | `notification`, `mention` | Server → Client |
+
+### 4.5 Task Breakdown
+
+| Task | Priority | Est. Time | Status |
+|------|----------|-----------|--------|
+| Core WebSocket Infrastructure | 🔴 Critical | 2.5h | ✅ |
+| Real-time Messaging | 🔴 Critical | 3.5h | ✅ |
+| Notifications & Presence | 🟡 High | 3h | ✅ |
+| DMs Real-time | 🔴 Critical | 1.5h | ✅ |
+| Redis Pub/Sub Scaling | 🟡 High | 3h | ✅ |
+| Advanced Features | 🟢 Medium | 4h | ✅ |
 
 ---
 
@@ -632,14 +701,22 @@ Sentry.init({
 ## 📊 Timeline Tổng Hợp
 
 ```
-Tuần 1:  ████████░░░░░░░░░░░░  Infrastructure Setup
-Tuần 2:  ░░████████░░░░░░░░░░  Core Auth + Database
-Tuần 3:  ░░░░████████░░░░░░░░  Spaces + Rooms
-Tuần 4:  ░░░░░░████████░░░░░░  Messages + DMs
-Tuần 5:  ░░░░░░░░████████░░░░  Files + Search + Notifications
-Tuần 6:  ░░░░░░░░░░████████░░  WebSocket + Real-time
-Tuần 7:  ░░░░░░░░░░░░████████  Testing + Optimization
-Tuần 8:  ░░░░░░░░░░░░░░████████  Deployment + Monitoring
+Tuần 1:  ████████████████████ 100%  Infrastructure Setup            ✅
+Tuần 2:  ████████████████████ 100%  Core Auth + Database            ✅
+Tuần 3:  ████████████████████ 100%  Spaces + Rooms                  ✅
+Tuần 4:  ████████████████████ 100%  Phase 3 Complete!               ✅
+Tuần 5:  ████████████████████ 100%  WebSocket Infrastructure        ✅
+Tuần 6:  ████████████████████ 100%  Real-time + Scaling             ✅
+Tuần 7:  ░░░░░░░░░░░░░░░░░░░░   0%  Testing + Optimization          ⏳
+Tuần 8:  ░░░░░░░░░░░░░░░░░░░░   0%  Deployment + Monitoring         ⏳
+```
+
+**Phase 3 Detail:**
+```
+3.1 Messages & DMs:        ████████████████████ 100% ✅
+3.2 Notifications:         ████████████████████ 100% ✅
+3.3 Files:                 ████████████████████ 100% ✅
+3.4 Search:                ████████████████████ 100% ✅
 ```
 
 ---
@@ -691,15 +768,28 @@ Tuần 8:  ░░░░░░░░░░░░░░████████  D
 - [ ] Setup Database module (Supabase)
 - [ ] Implement Auth module
 
-### Ngày 4-5: Features
-- [ ] Spaces API
-- [ ] Rooms API
-- [ ] Messages API
+### Ngày 4-5: Features (Phase 3)
+- [x] Spaces API
+- [x] Rooms API
+- [x] Messages API
+- [x] DMs API
+- [x] Notifications API
+- [x] Files API
+- [x] Search API
 
-### Ngày 6-7: Real-time
-- [ ] WebSocket Gateway
-- [ ] Redis Pub/Sub
-- [ ] Event handlers
+### Ngày 6-7: Real-time (Phase 4) ✅
+- [x] WebSocket Gateway & Socket.io
+- [x] JWT Authentication cho WS
+- [x] Real-time messaging events
+- [x] Typing indicators
+- [x] Online/Offline status
+- [x] Push notifications (WebSocket)
+- [x] Redis Pub/Sub scaling
+- [x] Rate limiting cho WebSocket
+- [x] Message delivery status
+- [x] File upload progress
+
+> **See:** [Phase 4 Summary](./phase4-summary.md)
 
 ### Ngày 8: Deploy
 - [ ] Docker build

@@ -137,7 +137,9 @@ export class RoomsService {
     // Check permission: only room creator or space admin can update
     const canModify = await this.canModifyRoom(room, userId);
     if (!canModify) {
-      throw new ForbiddenException('You do not have permission to update this room');
+      throw new ForbiddenException(
+        'You do not have permission to update this room',
+      );
     }
 
     const { data: updatedRoom, error } = await this.supabaseService
@@ -173,7 +175,9 @@ export class RoomsService {
     // Check permission: only room creator or space admin can delete
     const canModify = await this.canModifyRoom(room, userId);
     if (!canModify) {
-      throw new ForbiddenException('You do not have permission to delete this room');
+      throw new ForbiddenException(
+        'You do not have permission to delete this room',
+      );
     }
 
     // Delete from database (cascade will handle room_members)
@@ -343,7 +347,9 @@ export class RoomsService {
    */
   async getRoomStats(roomId: string): Promise<RoomStats> {
     // Try cache first
-    const cached = await this.redisService.hgetall(RedisKeys.room.stats(roomId));
+    const cached = await this.redisService.hgetall(
+      RedisKeys.room.stats(roomId),
+    );
     if (cached && Object.keys(cached).length > 0) {
       return {
         memberCount: parseInt(cached.memberCount, 10) || 0,
@@ -357,10 +363,11 @@ export class RoomsService {
     const memberCount = members.length;
 
     // Get message count from database
-    const { count: messageCount, error: countError } = await this.supabaseService
-      .from('messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('room_id', roomId);
+    const { count: messageCount, error: countError } =
+      await this.supabaseService
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('room_id', roomId);
 
     if (countError) {
       this.logger.error('Failed to get message count:', countError.message);
@@ -403,7 +410,10 @@ export class RoomsService {
   /**
    * Check if user is a space member
    */
-  private async isSpaceMember(spaceId: string, userId: string): Promise<boolean> {
+  private async isSpaceMember(
+    spaceId: string,
+    userId: string,
+  ): Promise<boolean> {
     // Try cache first
     const cached = await this.redisService.sismember(
       RedisKeys.space.members(spaceId),

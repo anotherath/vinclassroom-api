@@ -22,12 +22,14 @@ export const RedisKeys = {
     spaces: (userId: string) => `user:spaces:${userId}`,
     dms: (userId: string) => `user:dms:${userId}`,
     reactions: (userId: string) => `user:reactions:${userId}`,
-    unread: (userId: string, roomId: string) => `user:unread:${userId}:${roomId}`,
+    unread: (userId: string, roomId: string) =>
+      `user:unread:${userId}:${roomId}`,
     unreadTotal: (userId: string) => `user:unreadtotal:${userId}`,
     mentions: (userId: string) => `user:mentions:${userId}`,
     mentionCount: (userId: string) => `user:mentioncount:${userId}`,
     notifications: (userId: string) => `user:notifications:${userId}:recent`,
-    notificationsUnread: (userId: string) => `user:notifications:unread:${userId}`,
+    notificationsUnread: (userId: string) =>
+      `user:notifications:unread:${userId}`,
     filesRecent: (userId: string) => `user:files:recent:${userId}`,
   },
 
@@ -39,7 +41,8 @@ export const RedisKeys = {
     byId: (spaceId: string) => `space:${spaceId}`,
     rooms: (spaceId: string) => `space:rooms:${spaceId}`,
     members: (spaceId: string) => `space:members:${spaceId}`,
-    roomInfo: (spaceId: string, roomId: string) => `space:roominfo:${spaceId}:${roomId}`,
+    roomInfo: (spaceId: string, roomId: string) =>
+      `space:roominfo:${spaceId}:${roomId}`,
     stats: (spaceId: string) => `space:stats:${spaceId}`,
     invites: (spaceId: string) => `space:invites:${spaceId}`,
     filesShared: (spaceId: string) => `space:files:shared:${spaceId}`,
@@ -88,7 +91,8 @@ export const RedisKeys = {
       const sorted = [userId1, userId2].sort();
       return `dm:typing:${sorted[0]}:${sorted[1]}`;
     },
-    unread: (userId: string, otherUserId: string) => `user:dm:unread:${userId}:${otherUserId}`,
+    unread: (userId: string, otherUserId: string) =>
+      `user:dm:unread:${userId}:${otherUserId}`,
   },
 
   // Search
@@ -98,7 +102,8 @@ export const RedisKeys = {
   },
 
   // Activity
-  memberActivity: (spaceId: string, userId: string) => `member:activity:${spaceId}:${userId}`,
+  memberActivity: (spaceId: string, userId: string) =>
+    `member:activity:${spaceId}:${userId}`,
 
   // Pub/Sub Channels
   channel: {

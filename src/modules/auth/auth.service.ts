@@ -10,7 +10,13 @@ import { JwtService } from '@nestjs/jwt';
 import { SupabaseService } from '../../database/supabase.service';
 import { RedisService } from '../../redis/redis.service';
 import { RedisKeys } from '../../redis/keys';
-import { LoginDto, RegisterDto, RefreshTokenDto, UpdateProfileDto, ChangePasswordDto } from './dto';
+import {
+  LoginDto,
+  RegisterDto,
+  RefreshTokenDto,
+  UpdateProfileDto,
+  ChangePasswordDto,
+} from './dto';
 
 interface TokenPayload {
   sub: string;
@@ -49,13 +55,14 @@ export class AuthService {
     }
 
     // Create user in Supabase Auth
-    const { data: authData, error: authError } = await this.supabaseService.signUp(
-      email,
-      password,
-    );
+    const { data: authData, error: authError } =
+      await this.supabaseService.signUp(email, password);
 
     if (authError) {
-      this.logger.error('Failed to create user in Supabase Auth:', authError.message);
+      this.logger.error(
+        'Failed to create user in Supabase Auth:',
+        authError.message,
+      );
       throw new BadRequestException(authError.message);
     }
 
@@ -78,7 +85,9 @@ export class AuthService {
     if (profileError) {
       this.logger.error('Failed to create profile:', profileError.message);
       // Try to clean up the auth user
-      await this.supabaseService.getClient().auth.admin.deleteUser(authData.user.id);
+      await this.supabaseService
+        .getClient()
+        .auth.admin.deleteUser(authData.user.id);
       throw new BadRequestException('Failed to create user profile');
     }
 
@@ -108,15 +117,15 @@ export class AuthService {
         await this.redisService.expire(rateKey, 3600); // 1 hour
       }
       if (attempts > 5) {
-        throw new UnauthorizedException('Too many login attempts. Please try again later.');
+        throw new UnauthorizedException(
+          'Too many login attempts. Please try again later.',
+        );
       }
     }
 
     // Sign in with Supabase
-    const { data: authData, error: authError } = await this.supabaseService.signIn(
-      email,
-      password,
-    );
+    const { data: authData, error: authError } =
+      await this.supabaseService.signIn(email, password);
 
     if (authError || !authData.user) {
       throw new UnauthorizedException('Invalid email or password');
@@ -288,20 +297,29 @@ export class AuthService {
     }
 
     // Always return success to prevent email enumeration
-    return { message: 'If the email exists, a password reset link has been sent' };
+    return {
+      message: 'If the email exists, a password reset link has been sent',
+    };
   }
 
-  private async generateTokens(userId: string, email: string): Promise<AuthTokens> {
+  private async generateTokens(
+    userId: string,
+    email: string,
+  ): Promise<AuthTokens> {
     const payload: TokenPayload = { sub: userId, email };
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('jwt.secret'),
-      expiresIn: this.configService.get<string>('jwt.accessExpiration') as `${number}${'s'|'m'|'h'|'d'}`,
+      expiresIn: this.configService.get<string>(
+        'jwt.accessExpiration',
+      ) as `${number}${'s' | 'm' | 'h' | 'd'}`,
     });
 
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('jwt.refreshSecret'),
-      expiresIn: this.configService.get<string>('jwt.refreshExpiration') as `${number}${'s'|'m'|'h'|'d'}`,
+      expiresIn: this.configService.get<string>(
+        'jwt.refreshExpiration',
+      ) as `${number}${'s' | 'm' | 'h' | 'd'}`,
     });
 
     // Parse expiration time
@@ -316,7 +334,10 @@ export class AuthService {
     };
   }
 
-  private async storeSession(userId: string, tokens: AuthTokens): Promise<void> {
+  private async storeSession(
+    userId: string,
+    tokens: AuthTokens,
+  ): Promise<void> {
     const sessionData = {
       token: tokens.accessToken,
       refreshToken: tokens.refreshToken,

@@ -172,10 +172,7 @@ export class SpacesService {
   /**
    * Create a new space
    */
-  async createSpace(
-    userId: string,
-    dto: CreateSpaceDto,
-  ): Promise<Space> {
+  async createSpace(userId: string, dto: CreateSpaceDto): Promise<Space> {
     const inviteCode = this.generateRandomCode();
 
     const { data: space, error } = await this.supabase
@@ -380,10 +377,7 @@ export class SpacesService {
   /**
    * Add member to space
    */
-  async addMember(
-    spaceId: string,
-    dto: AddMemberDto,
-  ): Promise<SpaceMember> {
+  async addMember(spaceId: string, dto: AddMemberDto): Promise<SpaceMember> {
     // Check if space exists
     await this.getSpaceById(spaceId);
 
@@ -466,7 +460,9 @@ export class SpacesService {
       throw new NotFoundException('Member not found');
     }
 
-    this.logger.log(`Member role updated: ${spaceId}, user: ${userId}, role: ${role}`);
+    this.logger.log(
+      `Member role updated: ${spaceId}, user: ${userId}, role: ${role}`,
+    );
     return member;
   }
 
@@ -513,10 +509,7 @@ export class SpacesService {
   /**
    * Join space by invite code
    */
-  async joinByInviteCode(
-    code: string,
-    userId: string,
-  ): Promise<Space> {
+  async joinByInviteCode(code: string, userId: string): Promise<Space> {
     const { data: space, error } = await this.supabase
       .from('spaces')
       .select('*')

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { SupabaseService } from '../../database/supabase.service';
 import { RedisService } from '../../redis/redis.service';
 import { RedisKeys } from '../../redis/keys';
@@ -46,7 +51,8 @@ export class MembersService {
 
     const { data: members, error } = await this.supabaseService
       .from('space_members')
-      .select(`
+      .select(
+        `
         id,
         role,
         joined_at,
@@ -59,7 +65,8 @@ export class MembersService {
           status,
           last_seen
         )
-      `)
+      `,
+      )
       .eq('space_id', spaceId);
 
     if (error) {
@@ -69,22 +76,24 @@ export class MembersService {
 
     // Cache member IDs
     if (members && members.length > 0) {
-      const userIds = members.map(m => m.user_id).filter(Boolean);
+      const userIds = members.map((m) => m.user_id).filter(Boolean);
       if (userIds.length > 0) {
         await this.redisService.sadd(cacheKey, ...userIds);
       }
     }
 
-    return (members as unknown as MemberWithProfile[]).map(member => ({
-      id: member.profiles?.id,
-      email: member.profiles?.email,
-      displayName: member.profiles?.display_name,
-      avatar: member.profiles?.avatar_url,
-      status: member.profiles?.status,
-      lastSeen: member.profiles?.last_seen,
-      role: member.role,
-      joinedAt: member.joined_at,
-    })) || [];
+    return (
+      (members as unknown as MemberWithProfile[]).map((member) => ({
+        id: member.profiles?.id,
+        email: member.profiles?.email,
+        displayName: member.profiles?.display_name,
+        avatar: member.profiles?.avatar_url,
+        status: member.profiles?.status,
+        lastSeen: member.profiles?.last_seen,
+        role: member.role,
+        joinedAt: member.joined_at,
+      })) || []
+    );
   }
 
   /**
@@ -93,7 +102,8 @@ export class MembersService {
   async searchMembers(spaceId: string, query: string): Promise<any[]> {
     const { data: members, error } = await this.supabaseService
       .from('space_members')
-      .select(`
+      .select(
+        `
         id,
         role,
         joined_at,
@@ -105,30 +115,38 @@ export class MembersService {
           avatar_url,
           status
         )
-      `)
+      `,
+      )
       .eq('space_id', spaceId)
-      .or(`display_name.ilike.%${query}%,email.ilike.%${query}%`, { foreignTable: 'profiles' });
+      .or(`display_name.ilike.%${query}%,email.ilike.%${query}%`, {
+        foreignTable: 'profiles',
+      });
 
     if (error) {
       this.logger.error(`Failed to search members: ${error.message}`);
       return [];
     }
 
-    return (members as unknown as MemberWithProfile[]).map(member => ({
-      id: member.profiles?.id,
-      email: member.profiles?.email,
-      displayName: member.profiles?.display_name,
-      avatar: member.profiles?.avatar_url,
-      status: member.profiles?.status,
-      role: member.role,
-      joinedAt: member.joined_at,
-    })) || [];
+    return (
+      (members as unknown as MemberWithProfile[]).map((member) => ({
+        id: member.profiles?.id,
+        email: member.profiles?.email,
+        displayName: member.profiles?.display_name,
+        avatar: member.profiles?.avatar_url,
+        status: member.profiles?.status,
+        role: member.role,
+        joinedAt: member.joined_at,
+      })) || []
+    );
   }
 
   /**
    * Get member role
    */
-  async getMemberRole(spaceId: string, userId: string): Promise<{ role: string }> {
+  async getMemberRole(
+    spaceId: string,
+    userId: string,
+  ): Promise<{ role: string }> {
     const { data: member, error } = await this.supabaseService
       .from('space_members')
       .select('role')
@@ -153,35 +171,47 @@ export class MembersService {
     requestedBy: string,
   ): Promise<any> {
     // Check if requester has permission (owner or admin)
-    const { data: requester, error: requesterError } = await this.supabaseService
-      .from('space_members')
-      .select('role')
-      .eq('space_id', spaceId)
-      .eq('user_id', requestedBy)
-      .single();
+    const { data: requester, error: requesterError } =
+      await this.supabaseService
+        .from('space_members')
+        .select('role')
+        .eq('space_id', spaceId)
+        .eq('user_id', requestedBy)
+        .single();
 
     if (requesterError || !requester) {
       throw new ForbiddenException('You are not a member of this space');
     }
 
-    if (requester.role !== MemberRole.OWNER && requester.role !== MemberRole.ADMIN) {
-      throw new ForbiddenException('Only owners and admins can update member roles');
+    if (
+      requester.role !== MemberRole.OWNER &&
+      requester.role !== MemberRole.ADMIN
+    ) {
+      throw new ForbiddenException(
+        'Only owners and admins can update member roles',
+      );
     }
 
     // Cannot change owner's role unless you're the owner
-    const { data: targetMember, error: targetError } = await this.supabaseService
-      .from('space_members')
-      .select('role')
-      .eq('space_id', spaceId)
-      .eq('user_id', userId)
-      .single();
+    const { data: targetMember, error: targetError } =
+      await this.supabaseService
+        .from('space_members')
+        .select('role')
+        .eq('space_id', spaceId)
+        .eq('user_id', userId)
+        .single();
 
     if (targetError || !targetMember) {
       throw new NotFoundException('Member not found');
     }
 
-    if (targetMember.role === MemberRole.OWNER && requester.role !== MemberRole.OWNER) {
-      throw new ForbiddenException('Only the owner can change the owner\'s role');
+    if (
+      targetMember.role === MemberRole.OWNER &&
+      requester.role !== MemberRole.OWNER
+    ) {
+      throw new ForbiddenException(
+        "Only the owner can change the owner's role",
+      );
     }
 
     // Update role
@@ -190,7 +220,8 @@ export class MembersService {
       .update({ role: newRole })
       .eq('space_id', spaceId)
       .eq('user_id', userId)
-      .select(`
+      .select(
+        `
         id,
         role,
         joined_at,
@@ -200,7 +231,8 @@ export class MembersService {
           display_name,
           avatar_url
         )
-      `)
+      `,
+      )
       .single();
 
     if (error) {
@@ -225,7 +257,10 @@ export class MembersService {
   /**
    * Get member activity
    */
-  async getMemberActivity(spaceId: string, userId: string): Promise<MemberActivity> {
+  async getMemberActivity(
+    spaceId: string,
+    userId: string,
+  ): Promise<MemberActivity> {
     // Try cache first
     const cacheKey = RedisKeys.memberActivity(spaceId, userId);
     const cached = await this.redisService.hgetall(cacheKey);
@@ -264,7 +299,7 @@ export class MembersService {
 
     let messageCount = 0;
     if (rooms && rooms.length > 0) {
-      const roomIds = rooms.map(r => r.id);
+      const roomIds = rooms.map((r) => r.id);
       const { count, error: countError } = await this.supabaseService
         .from('messages')
         .select('*', { count: 'exact', head: true })
@@ -305,31 +340,36 @@ export class MembersService {
     requestedBy: string,
   ): Promise<void> {
     // Check if requester has permission
-    const { data: requester, error: requesterError } = await this.supabaseService
-      .from('space_members')
-      .select('role')
-      .eq('space_id', spaceId)
-      .eq('user_id', requestedBy)
-      .single();
+    const { data: requester, error: requesterError } =
+      await this.supabaseService
+        .from('space_members')
+        .select('role')
+        .eq('space_id', spaceId)
+        .eq('user_id', requestedBy)
+        .single();
 
     if (requesterError || !requester) {
       throw new ForbiddenException('You are not a member of this space');
     }
 
     // Get target member
-    const { data: targetMember, error: targetError } = await this.supabaseService
-      .from('space_members')
-      .select('role')
-      .eq('space_id', spaceId)
-      .eq('user_id', userId)
-      .single();
+    const { data: targetMember, error: targetError } =
+      await this.supabaseService
+        .from('space_members')
+        .select('role')
+        .eq('space_id', spaceId)
+        .eq('user_id', userId)
+        .single();
 
     if (targetError || !targetMember) {
       throw new NotFoundException('Member not found');
     }
 
     // Permission checks
-    if (requester.role !== MemberRole.OWNER && requester.role !== MemberRole.ADMIN) {
+    if (
+      requester.role !== MemberRole.OWNER &&
+      requester.role !== MemberRole.ADMIN
+    ) {
       // Members can only remove themselves
       if (requestedBy !== userId) {
         throw new ForbiddenException('You can only remove yourself');
@@ -340,7 +380,10 @@ export class MembersService {
       throw new ForbiddenException('Cannot remove the owner');
     }
 
-    if (targetMember.role === MemberRole.ADMIN && requester.role !== MemberRole.OWNER) {
+    if (
+      targetMember.role === MemberRole.ADMIN &&
+      requester.role !== MemberRole.OWNER
+    ) {
       throw new ForbiddenException('Only the owner can remove admins');
     }
 

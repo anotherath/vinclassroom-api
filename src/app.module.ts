@@ -12,6 +12,12 @@ import { UsersModule } from './modules/users/users.module';
 import { SpacesModule } from './modules/spaces/spaces.module';
 import { RoomsModule } from './modules/rooms/rooms.module';
 import { MembersModule } from './modules/members/members.module';
+import { MessagesModule } from './modules/messages/messages.module';
+import { DMsModule } from './modules/dms/dms.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { FilesModule } from './modules/files/files.module';
+import { SearchModule } from './modules/search/search.module';
+import { ChatGatewayModule } from './gateways/chat.gateway.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
@@ -46,12 +52,20 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     SupabaseModule,
     RedisModule,
 
-    // Feature Modules - Phase 2 Complete
+    // Feature Modules - Phase 2 & 3 Complete
     AuthModule,
     UsersModule,
     SpacesModule,
     RoomsModule,
     MembersModule,
+    MessagesModule,
+    DMsModule,
+    NotificationsModule,
+    FilesModule,
+    SearchModule,
+
+    // Phase 4 - WebSocket & Real-time
+    ChatGatewayModule,
   ],
   controllers: [AppController],
   providers: [

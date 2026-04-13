@@ -15,7 +15,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('jwt.secret'),
         signOptions: {
-          expiresIn: configService.get<string>('jwt.accessExpiration', '15m') as `${number}${'s'|'m'|'h'|'d'}`,
+          expiresIn: configService.get<string>(
+            'jwt.accessExpiration',
+            '15m',
+          ) as `${number}${'s' | 'm' | 'h' | 'd'}`,
         },
       }),
     }),

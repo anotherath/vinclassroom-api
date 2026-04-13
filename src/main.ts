@@ -3,11 +3,26 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import { RedisIoAdapter } from './gateways/adapters/redis.adapter';
+import { RedisService } from './redis/redis.service';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+
+  // Setup WebSocket adapter with Redis
+  const redisService = app.get(RedisService);
+  const redisAdapter = new RedisIoAdapter(app, redisService);
+  
+  try {
+    await redisAdapter.createRedisAdapter();
+    app.useWebSocketAdapter(redisAdapter);
+    logger.log('WebSocket adapter with Redis initialized');
+  } catch (error) {
+    logger.warn(`Failed to initialize Redis adapter: ${error.message}`);
+    logger.warn('Falling back to default WebSocket adapter (no horizontal scaling)');
+  }
 
   // Get config
   const port = configService.get<number>('app.port', 3000);
@@ -36,7 +51,7 @@ async function bootstrap() {
     .addTag('vinclassroom')
     .addBearerAuth() // for JWT
     .build();
-  
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup(`${apiPrefix}/docs`, app, document, {
     swaggerOptions: {
@@ -45,8 +60,12 @@ async function bootstrap() {
   });
 
   await app.listen(port);
-  
-  logger.log(`Application is running on: http://localhost:${port}/${apiPrefix}`);
-  logger.log(`Swagger documentation: http://localhost:${port}/${apiPrefix}/docs`);
+
+  logger.log(
+    `Application is running on: http://localhost:${port}/${apiPrefix}`,
+  );
+  logger.log(
+    `Swagger documentation: http://localhost:${port}/${apiPrefix}/docs`,
+  );
 }
 bootstrap();

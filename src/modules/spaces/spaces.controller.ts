@@ -15,11 +15,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SpacesService } from './spaces.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import {
-  CreateSpaceDto,
-  UpdateSpaceDto,
-  AddMemberDto,
-} from './dto';
+import { CreateSpaceDto, UpdateSpaceDto, AddMemberDto } from './dto';
 
 // Extend Request type to include user
 interface RequestWithUser extends Request {

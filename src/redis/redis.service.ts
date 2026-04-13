@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis, { RedisOptions } from 'ioredis';
 
@@ -25,7 +30,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     const config = this.configService.get<RedisConfig>('redis');
-    
+
     if (!config) {
       throw new Error('Redis configuration not found');
     }
@@ -36,7 +41,9 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       connectTimeout: config.connectTimeout || 10000,
       retryStrategy: (times: number) => {
         const delay = Math.min(times * 50, 2000);
-        this.logger.warn(`Redis connection retry attempt ${times}, delaying ${delay}ms`);
+        this.logger.warn(
+          `Redis connection retry attempt ${times}, delaying ${delay}ms`,
+        );
         return delay;
       },
       reconnectOnError: (err: Error) => {
@@ -49,14 +56,17 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     // Add TLS if needed
     if (config.tls) {
       redisOptions.tls = {
-        rejectUnauthorized: process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== 'false',
+        rejectUnauthorized:
+          process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== 'false',
       };
     }
 
     // Create clients based on config
     if (config.url) {
       // URL-based connection (recommended for external Redis)
-      this.logger.log(`Connecting to Redis via URL: ${this.maskUrl(config.url)}`);
+      this.logger.log(
+        `Connecting to Redis via URL: ${this.maskUrl(config.url)}`,
+      );
       this.client = new Redis(config.url, redisOptions);
       this.subscriber = new Redis(config.url, redisOptions);
     } else {
@@ -212,14 +222,22 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async hset(key: string, field: string, value: string): Promise<number>;
   async hset(key: string, fields: Record<string, string>): Promise<number>;
-  async hset(key: string, fieldOrFields: string | Record<string, string>, value?: string): Promise<number> {
+  async hset(
+    key: string,
+    fieldOrFields: string | Record<string, string>,
+    value?: string,
+  ): Promise<number> {
     if (typeof fieldOrFields === 'string') {
       return this.client.hset(key, fieldOrFields, value || '');
     }
     return this.client.hset(key, fieldOrFields);
   }
 
-  async hincrby(key: string, field: string, increment: number): Promise<number> {
+  async hincrby(
+    key: string,
+    field: string,
+    increment: number,
+  ): Promise<number> {
     return this.client.hincrby(key, field, increment);
   }
 
@@ -249,14 +267,24 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return this.client.zadd(key, score, member);
   }
 
-  async zrange(key: string, start: number, stop: number, withScores?: boolean): Promise<string[]> {
+  async zrange(
+    key: string,
+    start: number,
+    stop: number,
+    withScores?: boolean,
+  ): Promise<string[]> {
     if (withScores) {
       return this.client.zrange(key, start, stop, 'WITHSCORES');
     }
     return this.client.zrange(key, start, stop);
   }
 
-  async zrevrange(key: string, start: number, stop: number, withScores?: boolean): Promise<string[]> {
+  async zrevrange(
+    key: string,
+    start: number,
+    stop: number,
+    withScores?: boolean,
+  ): Promise<string[]> {
     if (withScores) {
       return this.client.zrevrange(key, start, stop, 'WITHSCORES');
     }
@@ -265,6 +293,14 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async zrem(key: string, ...members: string[]): Promise<number> {
     return this.client.zrem(key, ...members);
+  }
+
+  async zremrangebyrank(
+    key: string,
+    start: number,
+    stop: number,
+  ): Promise<number> {
+    return this.client.zremrangebyrank(key, start, stop);
   }
 
   // List operations
@@ -282,6 +318,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async ltrim(key: string, start: number, stop: number): Promise<string> {
     return this.client.ltrim(key, start, stop);
+  }
+
+  async lrem(key: string, count: number, value: string): Promise<number> {
+    return this.client.lrem(key, count, value);
   }
 
   // Pub/Sub

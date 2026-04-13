@@ -1,6 +1,11 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createClient, SupabaseClient, AuthResponse, User } from '@supabase/supabase-js';
+import {
+  createClient,
+  SupabaseClient,
+  AuthResponse,
+  User,
+} from '@supabase/supabase-js';
 
 @Injectable()
 export class SupabaseService implements OnModuleInit {
@@ -11,7 +16,9 @@ export class SupabaseService implements OnModuleInit {
 
   onModuleInit() {
     const supabaseUrl = this.configService.get<string>('database.supabaseUrl');
-    const supabaseKey = this.configService.get<string>('database.supabaseServiceRoleKey');
+    const supabaseKey = this.configService.get<string>(
+      'database.supabaseServiceRoleKey',
+    );
 
     if (!supabaseUrl || !supabaseKey) {
       throw new Error('Supabase URL and Service Role Key must be provided');
@@ -52,7 +59,9 @@ export class SupabaseService implements OnModuleInit {
     return this.client.auth.admin.signOut(token);
   }
 
-  async getUser(token: string): Promise<{ data: { user: User | null }; error: Error | null }> {
+  async getUser(
+    token: string,
+  ): Promise<{ data: { user: User | null }; error: Error | null }> {
     return this.client.auth.getUser(token);
   }
 
@@ -60,14 +69,18 @@ export class SupabaseService implements OnModuleInit {
     return this.client.auth.refreshSession({ refresh_token: refreshToken });
   }
 
-  async adminGetUserById(userId: string): Promise<{ data: { user: User | null }; error: Error | null }> {
+  async adminGetUserById(
+    userId: string,
+  ): Promise<{ data: { user: User | null }; error: Error | null }> {
     return this.client.auth.admin.getUserById(userId);
   }
 
   // Health check
   async healthCheck(): Promise<boolean> {
     try {
-      const { error } = await this.client.from('profiles').select('count', { count: 'exact', head: true });
+      const { error } = await this.client
+        .from('profiles')
+        .select('count', { count: 'exact', head: true });
       return !error;
     } catch {
       return false;
