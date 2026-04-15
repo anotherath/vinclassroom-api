@@ -187,7 +187,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
       // Update user status to online (only if first connection)
       const wasOffline = !(await this.isUserOnline(userId));
-      await this.redisService.set(RedisKeys.user.status(userId), 'online', 300); // 5 min TTL
+      await this.redisService.hset(RedisKeys.user.status(userId), {
+        online: 'true',
+        lastSeen: Date.now().toString(),
+      });
+      await this.redisService.expire(RedisKeys.user.status(userId), 300); // 5 min TTL
       await this.redisService.sadd(RedisKeys.usersOnline(), userId);
 
       // Notify friends/contacts that user is online (only on first connection)
@@ -231,7 +235,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
           // If no more connections, mark as offline
           if (connections.size === 0) {
             this.userConnections.delete(userId);
-            await this.redisService.set(RedisKeys.user.status(userId), 'offline', 60);
+            await this.redisService.hset(RedisKeys.user.status(userId), {
+              online: 'false',
+              lastSeen: Date.now().toString(),
+            });
+            await this.redisService.expire(RedisKeys.user.status(userId), 3600);
             await this.redisService.srem(RedisKeys.usersOnline(), userId);
 
             // Notify that user is offline
@@ -1236,11 +1244,21 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       const { status } = payload;
 
       // Update status in Redis
-      await this.redisService.set(
+      const isOnline = status === 'online';
+      await this.redisService.hset(RedisKeys.user.status(userId), {
+        online: isOnline ? 'true' : 'false',
+        lastSeen: Date.now().toString(),
+      });
+      await this.redisService.expire(
         RedisKeys.user.status(userId),
-        status,
-        status === 'online' ? 300 : 3600, // 5 min for online, 1 hour for others
+        isOnline ? 300 : 3600, // 5 min for online, 1 hour for others
       );
+
+      if (isOnline) {
+        await this.redisService.sadd(RedisKeys.usersOnline(), userId);
+      } else {
+        await this.redisService.srem(RedisKeys.usersOnline(), userId);
+      }
 
       // Broadcast status change
       this.broadcastUserStatus(userId, status);
@@ -1315,8 +1333,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
    * Check if user is online
    */
   private async isUserOnline(userId: string): Promise<boolean> {
-    const status = await this.redisService.get(RedisKeys.user.status(userId));
-    return status === 'online';
+    const online = await this.redisService.hget(
+      RedisKeys.user.status(userId),
+      'online',
+    );
+    return online === 'true';
   }
 
   /**
