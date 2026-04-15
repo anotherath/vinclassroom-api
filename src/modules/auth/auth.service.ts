@@ -44,11 +44,18 @@ export class AuthService {
     const { email, password, displayName, avatar } = dto;
 
     // Check if email already exists
-    const { data: existingUser } = await this.supabaseService
-      .from('profiles')
-      .select('id')
-      .eq('email', email)
-      .single();
+    const { data: existingUser, error: existingError } =
+      await this.supabaseService
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .limit(1)
+        .maybeSingle();
+
+    if (existingError && !existingError.message?.includes('0 rows')) {
+      this.logger.error('Failed to check existing user:', existingError.message);
+      throw new BadRequestException('Failed to register user');
+    }
 
     if (existingUser) {
       throw new ConflictException('Email already registered');
@@ -105,6 +112,7 @@ export class AuthService {
 
   async login(dto: LoginDto, ip?: string) {
     const { email, password } = dto;
+    this.logger.log(`Login attempt for ${email} from ${ip || 'unknown'}`);
 
     // Check rate limit
     if (ip) {
@@ -125,6 +133,10 @@ export class AuthService {
       await this.supabaseService.signIn(email, password);
 
     if (authError || !authData.user) {
+      this.logger.error(
+        'Login signIn failed:',
+        authError?.message || 'No user returned',
+      );
       throw new UnauthorizedException('Invalid email or password');
     }
 
@@ -133,9 +145,15 @@ export class AuthService {
       .from('profiles')
       .select('*')
       .eq('id', authData.user.id)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     if (profileError || !profile) {
+      this.logger.error(
+        'Login profile lookup failed for user',
+        authData.user.id,
+        profileError?.message || 'No profile found',
+      );
       throw new UnauthorizedException('User profile not found');
     }
 
@@ -198,13 +216,24 @@ export class AuthService {
   }
 
   async getProfile(userId: string) {
-    // Try to get from cache first
-    const cachedProfile = await this.redisService.get(
-      RedisKeys.user.profile(userId),
-    );
+    const cacheKey = RedisKeys.user.profile(userId);
 
-    if (cachedProfile) {
-      return { user: JSON.parse(cachedProfile) };
+    // Try to get from cache first (Hash)
+    const cached = await this.redisService.hgetall(cacheKey);
+    if (cached && Object.keys(cached).length > 0) {
+      return {
+        user: {
+          id: cached.id,
+          email: cached.email || undefined,
+          displayName: cached.display_name || undefined,
+          avatar: cached.avatar_url || undefined,
+          bio: cached.bio || undefined,
+          status: cached.status || undefined,
+          lastSeen: cached.last_seen || undefined,
+          createdAt: cached.created_at || undefined,
+          updatedAt: cached.updated_at || undefined,
+        },
+      };
     }
 
     // Get from database
@@ -218,12 +247,19 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    // Cache profile for 1 hour
-    await this.redisService.set(
-      RedisKeys.user.profile(userId),
-      JSON.stringify(this.formatUser(profile)),
-      3600,
-    );
+    // Cache profile as Hash for 1 hour
+    await this.redisService.hset(cacheKey, {
+      id: String(profile.id),
+      email: String(profile.email || ''),
+      display_name: String(profile.display_name || ''),
+      avatar_url: String(profile.avatar_url || ''),
+      bio: String(profile.bio || ''),
+      status: String(profile.status || ''),
+      last_seen: String(profile.last_seen || ''),
+      created_at: String(profile.created_at || ''),
+      updated_at: String(profile.updated_at || ''),
+    });
+    await this.redisService.expire(cacheKey, 3600);
 
     return { user: this.formatUser(profile) };
   }
@@ -255,10 +291,28 @@ export class AuthService {
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
-    // Note: In a real implementation, you would verify the current password
-    // by attempting a login or using Supabase's verify password API
-    // For now, we'll update the password via Supabase Admin API
+    // Get user email to verify current password
+    const { data: profile, error: profileError } = await this.supabaseService
+      .from('profiles')
+      .select('email')
+      .eq('id', userId)
+      .single();
 
+    if (profileError || !profile) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Verify current password
+    const { error: signInError } = await this.supabaseService.signIn(
+      profile.email,
+      dto.currentPassword,
+    );
+
+    if (signInError) {
+      throw new UnauthorizedException('Invalid current password');
+    }
+
+    // Update password via Supabase Admin API
     const { error } = await this.supabaseService
       .getClient()
       .auth.admin.updateUserById(userId, {
@@ -336,8 +390,12 @@ export class AuthService {
       lastActive: Date.now().toString(),
     };
 
-    // Store session
+    // Store session with TTL (access token lifetime)
+    const accessTtl = this.parseExpiration(
+      this.configService.get<string>('jwt.accessExpiration', '15m'),
+    );
     await this.redisService.hset(RedisKeys.session(userId), sessionData);
+    await this.redisService.expire(RedisKeys.session(userId), accessTtl);
 
     // Store refresh token with TTL (7 days)
     const refreshTtl = this.parseExpiration(

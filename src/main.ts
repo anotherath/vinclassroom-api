@@ -27,6 +27,13 @@ async function bootstrap() {
   // Get config
   const port = configService.get<number>('app.port', 3000);
   const apiPrefix = configService.get<string>('app.apiPrefix', 'api');
+  const corsOrigin = configService.get<string>('app.corsOrigin', '*');
+
+  // Enable CORS
+  app.enableCors({
+    origin: corsOrigin === '*' ? '*' : corsOrigin.split(','),
+    credentials: true,
+  });
 
   // Global Prefix
   app.setGlobalPrefix(apiPrefix);

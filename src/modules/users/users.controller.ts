@@ -1,13 +1,9 @@
 import {
   Controller,
   Get,
-  Post,
-  Delete,
   Param,
   Query,
   UseGuards,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
@@ -18,7 +14,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 interface UserProfileResponse {
   id: string;
   email?: string;
-  full_name?: string;
+  display_name?: string;
   avatar_url?: string;
   bio?: string;
   created_at?: string;
@@ -37,10 +33,6 @@ interface SearchUsersResponse {
   offset: number;
 }
 
-interface BlockUserResponse {
-  success: boolean;
-}
-
 @ApiTags('Users')
 @ApiBearerAuth()
 @Controller('users')
@@ -55,7 +47,7 @@ export class UsersController {
   @Get('search')
   async searchUsers(
     @Query() query: SearchUsersDto,
-    @CurrentUser('id') currentUserId: string,
+    @CurrentUser('userId') currentUserId: string,
   ): Promise<SearchUsersResponse> {
     const result = await this.usersService.searchUsers(query, currentUserId);
     return {
@@ -85,41 +77,5 @@ export class UsersController {
     @Param('userId') userId: string,
   ): Promise<UserStatusResponse> {
     return this.usersService.getUserStatus(userId);
-  }
-
-  /**
-   * Block a user
-   * POST /users/:userId/block
-   */
-  @Post(':userId/block')
-  @HttpCode(HttpStatus.OK)
-  async blockUser(
-    @Param('userId') blockedId: string,
-    @CurrentUser('id') currentUserId: string,
-  ): Promise<BlockUserResponse> {
-    return this.usersService.blockUser(currentUserId, blockedId);
-  }
-
-  /**
-   * Unblock a user
-   * DELETE /users/:userId/block
-   */
-  @Delete(':userId/block')
-  async unblockUser(
-    @Param('userId') blockedId: string,
-    @CurrentUser('id') currentUserId: string,
-  ): Promise<BlockUserResponse> {
-    return this.usersService.unblockUser(currentUserId, blockedId);
-  }
-
-  /**
-   * Get list of blocked users
-   * GET /users/blocked
-   */
-  @Get('blocked')
-  async getBlockedUsers(
-    @CurrentUser('id') currentUserId: string,
-  ): Promise<UserProfileResponse[]> {
-    return this.usersService.getBlockedUsers(currentUserId);
   }
 }

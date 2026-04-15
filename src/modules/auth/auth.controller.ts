@@ -15,7 +15,7 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { Public } from '../../common/decorators/public.decorator';
@@ -46,7 +46,6 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5 attempts per hour
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })

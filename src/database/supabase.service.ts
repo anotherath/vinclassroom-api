@@ -24,6 +24,16 @@ export class SupabaseService implements OnModuleInit {
       throw new Error('Supabase URL and Service Role Key must be provided');
     }
 
+    // Temporary log to verify key role
+    try {
+      const payload = JSON.parse(
+        Buffer.from(supabaseKey.split('.')[1], 'base64').toString(),
+      );
+      this.logger.log('Supabase key role: ' + payload.role);
+    } catch {
+      this.logger.warn('Could not decode Supabase key');
+    }
+
     this.client = createClient(supabaseUrl, supabaseKey, {
       auth: {
         autoRefreshToken: false,
@@ -48,7 +58,16 @@ export class SupabaseService implements OnModuleInit {
 
   // Auth methods
   async signUp(email: string, password: string): Promise<AuthResponse> {
-    return this.client.auth.signUp({ email, password });
+    this.logger.log('Using admin.createUser for: ' + email);
+    const { data, error } = await this.client.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+    return {
+      data: { user: data?.user ?? null, session: null },
+      error,
+    } as AuthResponse;
   }
 
   async signIn(email: string, password: string): Promise<AuthResponse> {

@@ -12,7 +12,7 @@ import { SearchUsersDto } from './dto/search-users.dto';
 interface UserProfile {
   id: string;
   email?: string;
-  full_name?: string;
+  display_name?: string;
   avatar_url?: string;
   bio?: string;
   created_at?: string;
@@ -72,7 +72,7 @@ export class UsersService {
     let dbQuery = this.supabaseService
       .from('profiles')
       .select('*', { count: 'exact' })
-      .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`)
+      .or(`display_name.ilike.%${q}%,email.ilike.%${q}%`)
       .neq('id', currentUserId)
       .range(offset, offset + limit - 1);
 
@@ -248,7 +248,7 @@ export class UsersService {
         blocker_id,
         blocked_id,
         created_at,
-        profiles:blocked_id(id, email, full_name, avatar_url, bio, created_at, updated_at)
+        profiles:blocked_id(id, email, display_name, avatar_url, bio, created_at, updated_at)
       `,
       )
       .eq('blocker_id', userId);
@@ -295,7 +295,7 @@ export class UsersService {
     const cacheData = {
       id: profile.id,
       email: profile.email || '',
-      full_name: profile.full_name || '',
+      display_name: profile.display_name || '',
       avatar_url: profile.avatar_url || '',
       bio: profile.bio || '',
       created_at: profile.created_at || '',
@@ -314,7 +314,7 @@ export class UsersService {
     return {
       id: cached.id,
       email: cached.email || undefined,
-      full_name: cached.full_name || undefined,
+      display_name: cached.display_name || undefined,
       avatar_url: cached.avatar_url || undefined,
       bio: cached.bio || undefined,
       created_at: cached.created_at || undefined,

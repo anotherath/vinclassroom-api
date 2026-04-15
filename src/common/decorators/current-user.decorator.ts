@@ -5,14 +5,16 @@ export const CurrentUser = createParamDecorator(
     const request = ctx.switchToHttp().getRequest();
     const user = request.user;
 
-    // Add token to user object if available
+    let result = user;
+
+    // Add token to user object if available (without mutating request.user)
     if (user) {
       const authHeader = request.headers.authorization;
       if (authHeader && authHeader.startsWith('Bearer ')) {
-        user.token = authHeader.substring(7);
+        result = { ...user, token: authHeader.substring(7) };
       }
     }
 
-    return data ? user?.[data] : user;
+    return data ? result?.[data] : result;
   },
 );

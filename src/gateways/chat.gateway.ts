@@ -99,9 +99,15 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
    * Subscribe to Redis channels for real-time events
    */
   private subscribeToRedisChannels(): void {
-    // Subscribe to room channels pattern
     const subscriber = this.redisService.getSubscriber();
-    
+
+    if (!subscriber) {
+      this.logger.error(
+        'Redis subscriber is not available. Skipping Redis pub/sub setup.',
+      );
+      return;
+    }
+
     // Subscribe to all room channels
     subscriber.psubscribe('channel:room:*', (err) => {
       if (err) {
@@ -1399,8 +1405,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
    */
   private getConnectionStats(): { connections: number; rooms: number } {
     return {
-      connections: this.server.sockets.sockets.size,
-      rooms: this.server.sockets.adapter.rooms.size,
+      connections: this.server?.sockets?.sockets?.size ?? 0,
+      rooms: this.server?.sockets?.adapter?.rooms?.size ?? 0,
     };
   }
 
