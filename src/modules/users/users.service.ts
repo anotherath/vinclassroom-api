@@ -37,6 +37,26 @@ export class UsersService {
   ) {}
 
   /**
+   * Update user status and last_seen in database
+   */
+  async updateUserStatus(
+    userId: string,
+    status: string,
+  ): Promise<void> {
+    const { error } = await this.supabaseService
+      .from('profiles')
+      .update({ status, last_seen: new Date().toISOString() })
+      .eq('id', userId);
+
+    if (error) {
+      this.logger.error(
+        `Failed to update user status for ${userId}:`,
+        error.message,
+      );
+    }
+  }
+
+  /**
    * Search users with query string, excluding blocked users
    */
   async searchUsers(

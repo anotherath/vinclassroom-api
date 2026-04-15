@@ -97,9 +97,6 @@ export class AuthService {
     // Store session in Redis
     await this.storeSession(authData.user.id, tokens);
 
-    // Set user online status
-    await this.setUserOnline(authData.user.id);
-
     return {
       user: this.formatUser(profile),
       ...tokens,
@@ -148,9 +145,6 @@ export class AuthService {
     // Store session in Redis
     await this.storeSession(authData.user.id, tokens);
 
-    // Set user online status
-    await this.setUserOnline(authData.user.id);
-
     // Reset rate limit on successful login
     if (ip) {
       await this.redisService.del(RedisKeys.rateLimit.login(ip));
@@ -166,9 +160,6 @@ export class AuthService {
     // Remove session from Redis
     await this.redisService.del(RedisKeys.session(userId));
     await this.redisService.del(RedisKeys.refreshToken(userId));
-
-    // Set user offline
-    await this.setUserOffline(userId);
 
     // Sign out from Supabase (optional, as token validation is done via JWT)
     await this.supabaseService.signOut(token);
@@ -357,22 +348,6 @@ export class AuthService {
       tokens.refreshToken,
       refreshTtl,
     );
-  }
-
-  private async setUserOnline(userId: string): Promise<void> {
-    await this.redisService.hset(RedisKeys.user.status(userId), {
-      online: 'true',
-      lastSeen: Date.now().toString(),
-    });
-    await this.redisService.sadd(RedisKeys.usersOnline(), userId);
-  }
-
-  private async setUserOffline(userId: string): Promise<void> {
-    await this.redisService.hset(RedisKeys.user.status(userId), {
-      online: 'false',
-      lastSeen: Date.now().toString(),
-    });
-    await this.redisService.srem(RedisKeys.usersOnline(), userId);
   }
 
   private parseExpiration(expiration: string): number {

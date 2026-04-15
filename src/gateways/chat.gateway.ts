@@ -16,6 +16,7 @@ import { RedisKeys } from '../redis/keys';
 import { MessagesService } from '../modules/messages/messages.service';
 import { NotificationsService } from '../modules/notifications/notifications.service';
 import { DMsService } from '../modules/dms/dms.service';
+import { UsersService } from '../modules/users/users.service';
 import { WsRateLimitGuard } from './guards/ws-rate-limit.guard';
 import type {
   AuthenticatedSocket,
@@ -70,6 +71,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     private readonly notificationsService: NotificationsService,
     private readonly dmsService: DMsService,
     private readonly rateLimitGuard: WsRateLimitGuard,
+    private readonly usersService: UsersService,
   ) {}
 
   /**
@@ -197,6 +199,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       // Notify friends/contacts that user is online (only on first connection)
       if (wasOffline) {
         this.broadcastUserStatus(userId, 'online');
+        await this.usersService.updateUserStatus(userId, 'online');
       }
 
       this.logger.log(`Client connected: ${client.id}, User: ${userId}, Connections: ${this.userConnections.get(userId)?.size || 0}`);
@@ -241,6 +244,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
             });
             await this.redisService.expire(RedisKeys.user.status(userId), 3600);
             await this.redisService.srem(RedisKeys.usersOnline(), userId);
+            await this.usersService.updateUserStatus(userId, 'offline');
 
             // Notify that user is offline
             this.broadcastUserStatus(userId, 'offline');
@@ -1259,6 +1263,9 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       } else {
         await this.redisService.srem(RedisKeys.usersOnline(), userId);
       }
+
+      // Update status in database
+      await this.usersService.updateUserStatus(userId, status);
 
       // Broadcast status change
       this.broadcastUserStatus(userId, status);

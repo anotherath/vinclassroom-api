@@ -8,9 +8,10 @@ import { RedisModule } from '../redis/redis.module';
 import { MessagesModule } from '../modules/messages/messages.module';
 import { NotificationsModule } from '../modules/notifications/notifications.module';
 import { DMsModule } from '../modules/dms/dms.module';
+import { UsersModule } from '../modules/users/users.module';
 
 @Module({
-  imports: [RedisModule, MessagesModule, NotificationsModule, DMsModule],
+  imports: [RedisModule, MessagesModule, NotificationsModule, DMsModule, UsersModule],
   providers: [ChatGateway, WsJwtGuard, WsRateLimitGuard, JwtService, ConfigService],
   exports: [ChatGateway],
 })
