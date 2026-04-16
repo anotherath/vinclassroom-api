@@ -15,4 +15,8 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   avatar?: string;
+
+  @IsOptional()
+  @IsString()
+  color?: string;
 }

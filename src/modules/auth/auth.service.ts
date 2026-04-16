@@ -40,8 +40,22 @@ export class AuthService {
     private redisService: RedisService,
   ) {}
 
+  private readonly usernameColors = [
+    'Đỏ gạch', 'Cam đất', 'Vàng mù tạt', 'Vàng chanh', 'Xanh lá bơ',
+    'Xanh ngọc nhạt', 'Xanh dương nhạt', 'Xanh biển', 'Tím nhạt', 'Hồng phấn',
+    'Hồng tím', 'Xanh cổ vịt', 'Xanh rêu', 'Xanh denim', 'Tím oải hương',
+    'Xám xanh', 'Nâu đất', 'Đỏ san hô', 'Vàng nắng', 'Xanh lá mạ',
+    'Xanh ngọc', 'Xanh dương', 'Tím hoa cà', 'Hồng đào', 'Xám bạc',
+    'Xanh rừng', 'Xanh biển sâu', 'Tím đậm', 'Cam neon', 'Vàng tươi',
+    'Hồng nhạt', 'Xanh ngọc bích',
+  ];
+
+  private getRandomColor(): string {
+    return this.usernameColors[Math.floor(Math.random() * this.usernameColors.length)];
+  }
+
   async register(dto: RegisterDto) {
-    const { email, password, displayName, avatar } = dto;
+    const { email, password, displayName, avatar, color } = dto;
 
     // Check if email already exists
     const { data: existingUser, error: existingError } =
@@ -85,6 +99,7 @@ export class AuthService {
         email,
         display_name: displayName,
         avatar_url: avatar,
+        color: color || this.getRandomColor(),
       })
       .select()
       .single();
@@ -228,6 +243,7 @@ export class AuthService {
           displayName: cached.display_name || undefined,
           avatar: cached.avatar_url || undefined,
           bio: cached.bio || undefined,
+          color: cached.color || undefined,
           status: cached.status || undefined,
           lastSeen: cached.last_seen || undefined,
           createdAt: cached.created_at || undefined,
@@ -254,6 +270,7 @@ export class AuthService {
       display_name: String(profile.display_name || ''),
       avatar_url: String(profile.avatar_url || ''),
       bio: String(profile.bio || ''),
+      color: String(profile.color || ''),
       status: String(profile.status || ''),
       last_seen: String(profile.last_seen || ''),
       created_at: String(profile.created_at || ''),
@@ -270,6 +287,7 @@ export class AuthService {
     if (dto.displayName) updateData.display_name = dto.displayName;
     if (dto.avatar !== undefined) updateData.avatar_url = dto.avatar;
     if (dto.bio !== undefined) updateData.bio = dto.bio;
+    if (dto.color !== undefined) updateData.color = dto.color;
 
     updateData.updated_at = new Date().toISOString();
 
@@ -432,6 +450,7 @@ export class AuthService {
       displayName: profile.display_name,
       avatar: profile.avatar_url,
       bio: profile.bio,
+      color: profile.color,
       status: profile.status,
       lastSeen: profile.last_seen,
       createdAt: profile.created_at,

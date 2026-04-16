@@ -11,6 +11,7 @@ CREATE TABLE profiles (
   display_name TEXT NOT NULL,
   avatar_url TEXT,
   bio TEXT,
+  color TEXT,
   status TEXT DEFAULT 'offline',
   last_seen TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW(),

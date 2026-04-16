@@ -46,6 +46,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         display_name: cached.display_name || undefined,
         avatar_url: cached.avatar_url || undefined,
         bio: cached.bio || undefined,
+        color: cached.color || undefined,
         status: cached.status || undefined,
         last_seen: cached.last_seen || undefined,
         created_at: cached.created_at || undefined,

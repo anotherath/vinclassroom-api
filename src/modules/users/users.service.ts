@@ -15,6 +15,7 @@ interface UserProfile {
   display_name?: string;
   avatar_url?: string;
   bio?: string;
+  color?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -298,6 +299,7 @@ export class UsersService {
       display_name: profile.display_name || '',
       avatar_url: profile.avatar_url || '',
       bio: profile.bio || '',
+      color: profile.color || '',
       created_at: profile.created_at || '',
       updated_at: profile.updated_at || '',
     };
@@ -317,6 +319,7 @@ export class UsersService {
       display_name: cached.display_name || undefined,
       avatar_url: cached.avatar_url || undefined,
       bio: cached.bio || undefined,
+      color: cached.color || undefined,
       created_at: cached.created_at || undefined,
       updated_at: cached.updated_at || undefined,
     };
